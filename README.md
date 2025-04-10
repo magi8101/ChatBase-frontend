@@ -4,6 +4,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-9.2%25-yellow)
 
 ## 👋 Welcome to ChatBase Frontend!
+[👉 Explore the Backend of ChatBase](https://github.com/magi8101/ChatBase-Backend)
 
 > *"Where conversations happen and bugs come to vacation."* 
 
