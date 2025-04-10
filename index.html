@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Hub Pro</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- Lottie for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <!-- Highlight.js for code highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/xml.min.js"></script>
+  <!-- Marked for markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- DOMPurify for sanitizing HTML -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            primary: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              200: '#a5f3fc',
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              900: '#164e63',
+              950: '#083344',
+            },
+            secondary: {
+              50: '#fdf4ff',
+              100: '#fae8ff',
+              200: '#f5d0fe',
+              300: '#f0abfc',
+              400: '#e879f9',
+              500: '#d946ef',
+              600: '#c026d3',
+              700: '#a21caf',
+              800: '#86198f',
+              900: '#701a75',
+              950: '#4a044e',
+            }
+          },
+          animation: {
+            'typing': 'typing 1s infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'spin-slow': 'spin 8s linear infinite',
+            'bounce-slow': 'bounce 2s infinite',
+          },
+          keyframes: {
+            typing: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 15px rgba(6, 182, 212, 0.5)',
+            'glow-lg': '0 0 25px rgba(6, 182, 212, 0.5)',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.5);
+      border-radius: 20px;
+    }
+    
+    /* Typing animation */
+    .typing-dot:nth-child(1) {
+      animation: bounce 1s infinite 0ms;
+    }
+    .typing-dot:nth-child(2) {
+      animation: bounce 1s infinite 150ms;
+    }
+    .typing-dot:nth-child(3) {
+      animation: bounce 1s infinite 300ms;
+    }
+    
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+    
+    /* Text typing animation */
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    
+    .typing-text {
+      overflow: hidden;
+      white-space: nowrap;
+      animation: typing 1.5s steps(40, end);
+    }
+    
+    /* Message appear animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message-appear {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Glass effect */
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .dark .glass {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      background-color: #06b6d4;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    /* Animated background */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.05;
+      background: linear-gradient(125deg, #06b6d4, #a21caf);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    
+    /* Code block styling */
+    pre {
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+      padding: 1rem;
+      background-color: #282c34;
+      overflow-x: auto;
+    }
+    
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+    
+    /* Markdown styling */
+    .markdown h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .markdown h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .markdown p {
+      margin-bottom: 0.75rem;
+    }
+    
+    .markdown ul, .markdown ol {
+      margin-left: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .markdown ul {
+      list-style-type: disc;
+    }
+    
+    .markdown ol {
+      list-style-type: decimal;
+    }
+    
+    .markdown a {
+      color: #06b6d4;
+      text-decoration: underline;
+    }
+    
+    .dark .markdown a {
+      color: #67e8f9;
+    }
+    
+    /* Emoji panel */
+    .emoji-panel {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 10px;
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem;
+      z-index: 20;
+      max-width: 300px;
+    }
+    
+    .dark .emoji-panel {
+      background-color: #1e293b;
+      border-color: #334155;
+    }
+    
+    .emoji-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 0.25rem;
+      transition: background-color 0.2s;
+      user-select: none;
+    }
+    
+    .emoji-btn:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .dark .emoji-btn:hover {
+      background-color: #334155;
+    }
+    
+    /* Animations */
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+    
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+    }
+    
+    .tooltip:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.25rem 0.5rem;
+      background-color: #0f172a;
+      color: white;
+      border-radius: 0.25rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      font-size: 0.75rem;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    .tooltip:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Platform-specific styles */
+    @supports (-webkit-touch-callout: none) {
+      /* iOS-specific styles */
+      input, textarea, button {
+        -webkit-appearance: none;
+        border-radius: 0.5rem;
+      }
+    }
+    
+    /* Lottie animation container */
+    .lottie-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Star rating styles */
+    .star-rating {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+    }
+    
+    .star-rating input {
+      display: none;
+    }
+    
+    .star-rating label {
+      cursor: pointer;
+      width: 2rem;
+      height: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d1d5db'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    .star-rating input:checked ~ label {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23fbbf24'%3E%3Cpath d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z'/%3E%3C/svg%3E");
+    }
+    
+    .dark .star-rating label {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/%3E%3C/svg%3E");
+    }
+    
+    .dark .star-rating input:checked ~ label {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23fbbf24'%3E%3Cpath d='M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 min-h-screen flex flex-col font-sans">
+  <!-- Animated background -->
+  <div class="animated-bg"></div>
+  
+  <!-- Toast notifications -->
+  <div id="toast" class="toast">
+    Message copied to clipboard!
+  </div>
+  
+  <!-- Lottie animation container for loading -->
+  <div id="loading-animation" class="fixed inset-0 bg-white dark:bg-gray-900 z-[100] flex items-center justify-center">
+    <div id="lottie-loading" class="w-32 h-32"></div>
+  </div>
+
+  <!-- Email Modal Popup -->
+  <div id="email-modal" class="modal-overlay">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300">
+      <div class="flex justify-center mb-6">
+        <div id="lottie-email" class="w-24 h-24"></div>
+      </div>
+      <h2 class="text-2xl font-bold mb-2 text-center">Welcome to Chat Hub Pro</h2>
+      <p class="text-gray-600 dark:text-gray-400 mb-6 text-center">Please enter your email to continue</p>
+      <form id="email-form" class="flex flex-col space-y-4">
+        <div class="relative">
+          <input
+            type="email"
+            id="modal-email-input"
+            placeholder="Your email address"
+            class="w-full p-4 pl-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+            required
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+          </svg>
+        </div>
+        <button type="submit" class="p-4 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+          Start Chatting
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 transition-all duration-300">
+    <div class="container mx-auto flex justify-between items-center p-4">
+      <div class="flex items-center space-x-3">
+        <div id="logo-animation" class="w-10 h-10"></div>
+        <h1 class="text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400 tracking-tight">Chat Hub Pro</h1>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button id="faq-button" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors tooltip" data-tooltip="View FAQs" aria-label="View FAQs">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+        <button id="feedback-button" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors tooltip" data-tooltip="Leave Feedback" aria-label="Leave Feedback">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        </button>
+        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors tooltip" data-tooltip="Toggle dark mode" aria-label="Toggle dark mode">
+          <!-- Sun icon for dark mode -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <!-- Moon icon for light mode -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+        <button id="settings-button" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors tooltip" data-tooltip="Settings" aria-label="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+        <button id="clear-chat" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors tooltip" data-tooltip="Clear chat" aria-label="Clear chat history">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+        <div class="relative" id="user-menu">
+          <button id="user-menu-button" class="flex items-center justify-center h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors shadow-sm hover:shadow-md" aria-label="User menu">
+            <span id="user-initial">?</span>
+          </button>
+          <div id="user-dropdown" class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 hidden z-10 border border-gray-200 dark:border-gray-700 transform origin-top-right transition-all duration-200 scale-95 opacity-0">
+            <div id="user-email-display" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700"></div>
+            <button id="change-email" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Change Email</button>
+            <button id="export-chat" class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Export Chat History</button>
+            <div id="auth-options" class="border-t border-gray-200 dark:border-gray-700">
+              <a href="login.html" class="block w-full text-left px-4 py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700">Log In</a>
+              <a href="signup.html" class="block w-full text-left px-4 py-2 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700">Sign Up</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- FAQ Modal -->
+  <div id="faq-modal" class="modal-overlay hidden">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-2xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Frequently Asked Questions</h2>
+        <button id="close-faq" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div id="faq-container" class="space-y-4">
+        <div class="flex justify-center">
+          <div class="animate-spin h-8 w-8 border-4 border-primary-500 rounded-full border-t-transparent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Feedback Modal -->
+  <div id="feedback-modal" class="modal-overlay hidden">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Give Feedback</h2>
+        <button id="close-feedback" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <form id="feedback-form" class="space-y-4">
+        <div class="space-y-2">
+          <label for="feedback-rating" class="block text-sm font-medium">Rating</label>
+          <div class="flex space-x-2">
+            <div class="star-rating">
+              <input type="radio" id="star5" name="rating" value="5" /><label for="star5"></label>
+              <input type="radio" id="star4" name="rating" value="4" /><label for="star4"></label>
+              <input type="radio" id="star3" name="rating" value="3" /><label for="star3"></label>
+              <input type="radio" id="star2" name="rating" value="2" /><label for="star2"></label>
+              <input type="radio" id="star1" name="rating" value="1" /><label for="star1"></label>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label for="feedback-text" class="block text-sm font-medium">Your Feedback</label>
+          <textarea id="feedback-text" name="feedback_text" rows="4" placeholder="Please share your experience with our chatbot..." required class="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none"></textarea>
+        </div>
+        <button type="submit" id="submit-feedback" class="w-full p-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors font-medium shadow-md hover:shadow-lg">
+          Submit Feedback
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md border border-gray-200 dark:border-gray-700 transform transition-all duration-300">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Settings</h2>
+        <button id="close-settings" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-6">
+        <!-- Theme Settings -->
+        <div>
+          <h3 class="text-lg font-medium mb-2">Appearance</h3>
+          <div class="flex items-center justify-between">
+            <span>Dark Mode</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="theme-switch" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Visual Effects -->
+        <div>
+          <h3 class="text-lg font-medium mb-2">Visual Effects</h3>
+          <div class="flex items-center justify-between mb-2">
+            <span>Background Animation</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="bg-animation-switch" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Message Animations</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="message-animation-switch" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Accessibility -->
+        <div>
+          <h3 class="text-lg font-medium mb-2">Accessibility</h3>
+          <div class="flex items-center justify-between mb-2">
+            <span>Reduced Motion</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="reduced-motion-switch" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>High Contrast</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="high-contrast-switch" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+          </div>
+        </div>
+        
+        <button id="save-settings" class="w-full p-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Welcome message -->
+  <div id="welcome-message" class="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/30 dark:to-secondary-900/30 p-4 border-b border-primary-100 dark:border-primary-800 transition-all duration-300">
+    <div class="container mx-auto max-w-4xl">
+      <div class="flex items-start space-x-4">
+        <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-800 rounded-full p-2 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-600 dark:text-primary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="font-medium text-primary-800 dark:text-primary-200">Welcome to Chat Hub Pro!</h2>
+          <p class="text-sm text-primary-600 dark:text-primary-400">Ask me anything or try these examples:</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button class="example-prompt text-xs bg-white dark:bg-gray-800 border border-primary-200 dark:border-primary-800 rounded-full px-3 py-1 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/50 transition-colors shadow-sm hover:shadow transform hover:-translate-y-0.5 active:translate-y-0">
+              How do I create a React component?
+            </button>
+            <button class="example-prompt text-xs bg-white dark:bg-gray-800 border border-primary-200 dark:border-primary-800 rounded-full px-3 py-1 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/50 transition-colors shadow-sm hover:shadow transform hover:-translate-y-0.5 active:translate-y-0">
+              What's the difference between let and const?
+            </button>
+            <button class="example-prompt text-xs bg-white dark:bg-gray-800 border border-primary-200 dark:border-primary-800 rounded-full px-3 py-1 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/50 transition-colors shadow-sm hover:shadow transform hover:-translate-y-0.5 active:translate-y-0">
+              Explain async/await in JavaScript
+            </button>
+            <button class="example-prompt text-xs bg-white dark:bg-gray-800 border border-primary-200 dark:border-primary-800 rounded-full px-3 py-1 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/50 transition-colors shadow-sm hover:shadow transform hover:-translate-y-0.5 active:translate-y-0">
+              How can I optimize website performance?
+            </button>
+            <button class="example-prompt text-xs bg-white dark:bg-gray-800 border border-primary-200 dark:border-primary-800 rounded-full px-3 py-1 text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/50 transition-colors shadow-sm hover:shadow transform hover:-translate-y-0.5 active:translate-y-0">
+              Tell me about modern web development
+            </button>
+          </div>
+        </div>
+        <button id="close-welcome" class="text-primary-400 hover:text-primary-600 dark:text-primary-500 dark:hover:text-primary-300 flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Chat container -->
+  <div class="flex-1 overflow-y-auto p-4 chat-messages" id="chat-messages">
+    <div class="container mx-auto max-w-4xl space-y-6">
+      <!-- Messages will be added here dynamically -->
+    </div>
+  </div>
+  
+  <!-- Input area -->
+  <div class="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 sticky bottom-0 transition-all duration-300">
+    <div class="container mx-auto max-w-4xl p-4">
+      <form id="chat-form" class="flex flex-col space-y-2">
+        <div class="flex space-x-2">
+          <div class="flex-1 relative">
+            <textarea
+              id="message-input"
+              placeholder="Type a message..."
+              rows="1"
+              class="w-full p-3 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none transition-all duration-200 shadow-sm"
+            ></textarea>
+            <div class="absolute right-3 bottom-3 flex space-x-2 text-gray-400">
+              <button type="button" id="emoji-button" class="hover:text-gray-600 dark:hover:text-gray-200 tooltip" data-tooltip="Add emoji" aria-label="Add emoji">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              <button type="button" id="upload-button" class="hover:text-gray-600 dark:hover:text-gray-200 tooltip" data-tooltip="Upload file" aria-label="Upload file">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </button>
+            </div>
+            <!-- Emoji Panel (Hidden by default) -->
+            <div id="emoji-panel" class="emoji-panel hidden">
+              <!-- Emojis will be added here dynamically -->
+            </div>
+          </div>
+          <button
+            type="submit"
+            id="send-button"
+            class="p-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors flex items-center justify-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            disabled
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
+        </div>
+        <div id="suggestion-chips" class="flex flex-wrap gap-2 overflow-x-auto pb-2 hidden">
+          <!-- Suggestion chips will be added here dynamically -->
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // API connection configuration
+    const API_BASE_URL = 'https://api-example-chatbot.example.com';
+    
+    // --- Typing indicator functions ---
+    function showTypingIndicator() {
+      // Create typing indicator element if it doesn't exist
+      let typingIndicator = chatMessages.querySelector('.typing-indicator');
+      
+      if (!typingIndicator) {
+        typingIndicator = document.createElement('div');
+        typingIndicator.className = 'typing-indicator flex message-appear';
+        typingIndicator.innerHTML = `
+          <div class="flex items-center bg-white dark:bg-gray-800 rounded-lg p-4 shadow max-w-prose rounded-tl-none text-gray-800 dark:text-gray-200">
+            <div class="flex space-x-1">
+              <span class="typing-dot w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full"></span>
+            </div>
+          </div>
+        `;
+        
+        // Append to chat container
+        chatMessages.querySelector('.container').appendChild(typingIndicator);
+        
+        // Scroll to see the typing indicator
+        scrollToBottom();
+      }
+    }
+    
+    function removeTypingIndicator() {
+      // Remove typing indicator if it exists
+      const typingIndicator = chatMessages.querySelector('.typing-indicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+    
+    // --- Chat functionality ---
+    function sendMessage(e) {
+      if (e) e.preventDefault();
+      
+      const message = messageInput.value.trim();
+      if (!message) return;
+      
+      // Add user message to chat
+      appendMessage('user', message);
+      
+      // Save to chat history
+      const chatHistory = getChatHistory();
+      chatHistory.push({
+        sender: 'user',
+        text: message,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Reset input and adjust height
+      messageInput.value = '';
+      adjustTextareaHeight();
+      
+      // Show typing indicator
+      showTypingIndicator();
+      
+      // Get the email from localStorage or use a default
+      const email = localStorage.getItem('userEmail') || 'guest@example.com';
+      
+      // Call the backend API
+      fetch(`${API_BASE_URL}/api/chat/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          user_id: btoa(email), // Simple ID generation based on email
+          message: message,
+          history: chatHistory.slice(-10) // Send last 10 messages for context
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Remove typing indicator
+        removeTypingIndicator();
+        
+        // Get the AI response from the backend
+        const botResponse = data.ai_reply;
+        appendMessage('bot', botResponse);
+        
+        // Add bot message to history
+        chatHistory.push({
+          sender: 'bot',
+          text: botResponse,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Save updated history
+        saveChatHistory(chatHistory);
+        
+        // Track user interaction if lead manager is available
+        if (window.leadManager) {
+          window.leadManager.trackActivity({
+            email: email,
+            type: 'chat_message',
+            metadata: { messageLength: message.length }
+          });
+        }
+        
+        // Make suggestion chips visible with 50% probability
+        if (Math.random() > 0.5) {
+          showSuggestionChips(generateSuggestions(message));
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching from API:', error);
+        
+        // Remove typing indicator
+        removeTypingIndicator();
+        
+        // Show error message
+        appendMessage('bot', "Sorry, I'm having trouble connecting to the server. Please try again later.");
+        
+        // Add error message to history
+        chatHistory.push({
+          sender: 'bot',
+          text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+          timestamp: new Date().toISOString()
+        });
+        
+        // Save updated history
+        saveChatHistory(chatHistory);
+      });
+    }
+    
+    // --- Email Modal Popup Logic ---
+    function setupEmailModalHandling() {
+      const emailModal = document.getElementById('email-modal');
+      const emailForm = document.getElementById('email-form');
+      const modalEmailInput = document.getElementById('modal-email-input');
+      
+      // Check if user is already authenticated
+      const storedEmail = localStorage.getItem('userEmail');
+      const storedUserData = localStorage.getItem('userData');
+      
+      if (storedEmail && storedUserData) {
+        // User already authenticated, hide modal
+        emailModal.style.display = 'none';
+        updateUserMenuDisplay(JSON.parse(storedUserData));
+      } else {
+        // Show email modal for guest usage or prompt to login
+        emailModal.style.display = 'flex';
+        
+        // Add login/signup buttons to modal
+        const modalContent = emailModal.querySelector('.bg-white.dark\\:bg-gray-800');
+        const authButtons = document.createElement('div');
+        authButtons.className = 'flex space-x-4 mt-4';
+        authButtons.innerHTML = `
+          <a href="login.html" class="flex-1 p-3 rounded-lg bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-300 border border-primary-500 text-center font-medium shadow-md hover:shadow-lg">
+            Log In
+          </a>
+          <a href="signup.html" class="flex-1 p-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-center font-medium shadow-md hover:shadow-lg">
+            Sign Up
+          </a>
+        `;
+        
+        // Insert before the form
+        modalContent.insertBefore(authButtons, emailForm);
+        
+        // Add separator line
+        const separator = document.createElement('div');
+        separator.className = 'flex items-center my-4';
+        separator.innerHTML = `
+          <div class="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
+          <span class="px-3 text-sm text-gray-400 dark:text-gray-500">or continue as guest</span>
+          <div class="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
+        `;
+        modalContent.insertBefore(separator, emailForm);
+      }
+      
+      // Email form submission for guest users
+      emailForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const emailVal = modalEmailInput.value.trim();
+        if (emailVal) {
+          userEmail = emailVal;
+          localStorage.setItem("userEmail", userEmail);
+          
+          // Update UI with user email
+          updateUserMenuDisplay({ email: emailVal });
+          
+          // Animate modal closing
+          gsap.to(emailModal.querySelector('div'), {
+            scale: 0.9,
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => {
+              emailModal.style.display = 'none';
+              messageInput.disabled = false;
+              sendButton.disabled = false;
+              messageInput.focus();
+            }
+          });
+        }
+      });
+    }
+    
+    // --- User Menu & Authentication ---
+    function updateUserMenuDisplay(userData = null) {
+      const userMenuButton = document.getElementById('user-menu-button');
+      const userInitial = document.getElementById('user-initial');
+      const userEmailDisplay = document.getElementById('user-email-display');
+      const userDropdown = document.getElementById('user-dropdown');
+      
+      // Get user data
+      const email = userData?.email || localStorage.getItem("userEmail") || "";
+      const fullName = userData?.full_name || "";
+      
+      if (email) {
+        // Set initial based on name if available, otherwise use email
+        const initial = fullName ? fullName.charAt(0).toUpperCase() : email.charAt(0).toUpperCase();
+        userInitial.textContent = initial;
+        userEmailDisplay.textContent = email;
+        
+        // Add logout button if user is fully authenticated
+        if (localStorage.getItem("userData")) {
+          // Find or create logout button
+          let logoutButton = document.getElementById('logout-button');
+          if (!logoutButton) {
+            logoutButton = document.createElement('button');
+            logoutButton.id = 'logout-button';
+            logoutButton.className = 'block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700';
+            logoutButton.textContent = 'Log Out';
+            logoutButton.addEventListener('click', handleLogout);
+            userDropdown.appendChild(logoutButton);
+          }
+        }
+      }
+    }
+    
+    function handleLogout() {
+      // Remove user data from localStorage
+      localStorage.removeItem("userData");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("loginTime");
+      
+      // Show confirmation toast
+      showToast('You have been logged out');
+      
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1000);
+    }
+
+    // --- Theme handling ---
+    function initTheme() {
+      // Check for saved theme preference or use system preference
+      const savedTheme = localStorage.getItem('theme');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-switch').checked = true;
+      }
+      
+      // Theme toggle button functionality
+      const themeToggle = document.getElementById('theme-toggle');
+      themeToggle.addEventListener('click', toggleTheme);
+      
+      // Theme switch in settings
+      const themeSwitch = document.getElementById('theme-switch');
+      themeSwitch.addEventListener('change', function() {
+        if (this.checked) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        }
+      });
+    }
+    
+    function toggleTheme() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        document.getElementById('theme-switch').checked = false;
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        document.getElementById('theme-switch').checked = true;
+      }
+    }
+    
+    // --- Chat functionality ---
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const welcomeMessage = document.getElementById('welcome-message');
+    let textareaDefaultHeight;
+    let userEmail = localStorage.getItem("userEmail") || "";
+    
+    function renderChatMessages() {
+      // Clear chat container first
+      const chatContainer = chatMessages.querySelector('.container');
+      chatContainer.innerHTML = '';
+      
+      // Get chat history from localStorage
+      const chatHistory = getChatHistory();
+      
+      // If no chat history, don't do anything further
+      if (chatHistory.length === 0) return;
+      
+      // Render each message
+      chatHistory.forEach(message => {
+        appendMessage(message.sender, message.text, message.timestamp);
+      });
+      
+      // Scroll to bottom after rendering
+      scrollToBottom();
+    }
+    
+    function getChatHistory() {
+      const history = localStorage.getItem("chatHistory");
+      return history ? JSON.parse(history) : [];
+    }
+    
+    function saveChatHistory(chatHistory) {
+      localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+    }
+    
+    function appendMessage(sender, text, timestamp) {
+      const isBot = sender === 'bot';
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message-appear';
+      
+      // Format timestamp
+      const formattedTime = formatTimestamp(timestamp || new Date().toISOString());
+      
+      // Create message HTML
+      messageDiv.innerHTML = `
+        <div class="flex ${isBot ? '' : 'justify-end'}">
+          <div class="${isBot ? 'bg-white dark:bg-gray-800' : 'bg-primary-600 dark:bg-primary-700'} rounded-lg p-4 shadow max-w-prose ${isBot ? 'rounded-tl-none' : 'rounded-tr-none'} ${isBot ? 'text-gray-800 dark:text-gray-200' : 'text-white'} relative">
+            <div class="${isBot ? 'markdown' : ''}">${isBot ? DOMPurify.sanitize(marked.parse(text)) : text}</div>
+            <div class="text-xs mt-2 ${isBot ? 'text-gray-500 dark:text-gray-400' : 'text-primary-100'} flex justify-between items-center">
+              <span>${formattedTime}</span>
+              ${isBot ? `
+                <div class="flex space-x-2">
+                  <button class="copy-message" title="Copy to clipboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add to chat container
+      chatMessages.querySelector('.container').appendChild(messageDiv);
+      
+      // Apply syntax highlighting to code blocks
+      if (isBot) {
+        messageDiv.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+      }
+      
+      // Add copy functionality to bot messages
+      if (isBot) {
+        const copyButton = messageDiv.querySelector('.copy-message');
+        if (copyButton) {
+          copyButton.addEventListener('click', () => {
+            const textToCopy = text;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              showToast('Message copied to clipboard!');
+            }).catch(err => {
+              console.error('Failed to copy text: ', err);
+            });
+          });
+        }
+      }
+      
+      // Scroll to the new message
+      scrollToBottom();
+    }
+    
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function adjustTextareaHeight() {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 200) + 'px';
+    }
+    
+    function generateSuggestions(message) {
+      message = message.toLowerCase();
+      
+      if (message.includes('react')) {
+        return [
+          "What are React hooks?", 
+          "React vs Angular", 
+          "React performance tips", 
+          "State management in React"
+        ];
+      } else if (message.includes('javascript')) {
+        return [
+          "ES6 features", 
+          "JavaScript best practices", 
+          "Promises vs async/await",
+          "JavaScript design patterns"
+        ];
+      } else if (message.includes('css')) {
+        return [
+          "CSS Grid examples", 
+          "CSS animations", 
+          "CSS variables", 
+          "Responsive design tips"
+        ];
+      } else {
+        return [
+          "Frontend frameworks comparison",
+          "Backend technologies",
+          "Web security best practices",
+          "Performance optimization"
+        ];
+      }
+    }
+    
+    function showSuggestionChips(suggestions) {
+      const suggestionsContainer = document.getElementById('suggestion-chips');
+      suggestionsContainer.innerHTML = '';
+      suggestionsContainer.classList.remove('hidden');
+      
+      suggestions.forEach(text => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm hover:shadow';
+        chip.textContent = text;
+        
+        chip.addEventListener('click', () => {
+          messageInput.value = text;
+          suggestionsContainer.classList.add('hidden');
+          adjustTextareaHeight();
+          messageInput.focus();
+        });
+        
+        suggestionsContainer.appendChild(chip);
+      });
+    }
+    
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    // --- Initialize emoji panel ---
+    function initEmojiPanel() {
+      const emojiPanel = document.getElementById('emoji-panel');
+      const emojiButton = document.getElementById('emoji-button');
+      const emojis = ['😊', '👍', '👏', '❤️', '🎉', '🔥', '😂', '🤔', '👀', '✅', '⚡️', '🚀', '⭐', '📚', '💻', '🐛', '🔧', '🌎', '🤖', '👾', '🦄', '🧠', '💡', '⚙️'];
+      
+      // Populate emoji panel
+      emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'emoji-btn';
+        btn.textContent = emoji;
+        btn.addEventListener('click', () => {
+          // Insert emoji at cursor position
+          insertAtCursor(messageInput, emoji);
+          emojiPanel.classList.add('hidden');
+          messageInput.focus();
+          adjustTextareaHeight();
+        });
+        emojiPanel.appendChild(btn);
+      });
+      
+      // Toggle emoji panel
+      emojiButton.addEventListener('click', () => {
+        emojiPanel.classList.toggle('hidden');
+      });
+      
+      // Close emoji panel when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!emojiPanel.contains(e.target) && !emojiButton.contains(e.target)) {
+          emojiPanel.classList.add('hidden');
+        }
+      });
+    }
+    
+    function insertAtCursor(input, text) {
+      const { selectionStart, selectionEnd, value } = input;
+      const newValue = value.substring(0, selectionStart) + text + value.substring(selectionEnd);
+      input.value = newValue;
+      input.selectionStart = input.selectionEnd = selectionStart + text.length;
+    }
+    
+    // --- Initialize settings ---
+    function initializeSettings() {
+      const settingsButton = document.getElementById('settings-button');
+      const settingsModal = document.getElementById('settings-modal');
+      const closeSettings = document.getElementById('close-settings');
+      const saveSettings = document.getElementById('save-settings');
+      
+      // Background animation toggle
+      const bgAnimationSwitch = document.getElementById('bg-animation-switch');
+      const animatedBg = document.querySelector('.animated-bg');
+      
+      // Message animation toggle
+      const messageAnimationSwitch = document.getElementById('message-animation-switch');
+      
+      // Reduced motion toggle
+      const reducedMotionSwitch = document.getElementById('reduced-motion-switch');
+      
+      // High contrast toggle
+      const highContrastSwitch = document.getElementById('high-contrast-switch');
+      
+      // Load saved settings
+      const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+      
+      // Apply saved settings
+      if (settings.bgAnimation === false) {
+        animatedBg.style.display = 'none';
+        bgAnimationSwitch.checked = false;
+      }
+      
+      if (settings.messageAnimation === false) {
+        document.documentElement.style.setProperty('--message-animation', 'none');
+        messageAnimationSwitch.checked = false;
+      }
+      
+      if (settings.reducedMotion === true) {
+        document.documentElement.classList.add('reduce-motion');
+        reducedMotionSwitch.checked = true;
+      }
+      
+      if (settings.highContrast === true) {
+        document.documentElement.classList.add('high-contrast');
+        highContrastSwitch.checked = true;
+      }
+      
+      // Settings modal toggle
+      settingsButton.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+      });
+      
+      closeSettings.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+      });
+      
+      // Save settings
+      saveSettings.addEventListener('click', () => {
+        // Update settings
+        const settings = {
+          bgAnimation: bgAnimationSwitch.checked,
+          messageAnimation: messageAnimationSwitch.checked,
+          reducedMotion: reducedMotionSwitch.checked,
+          highContrast: highContrastSwitch.checked
+        };
+        
+        // Apply settings
+        animatedBg.style.display = settings.bgAnimation ? 'block' : 'none';
+        document.documentElement.style.setProperty('--message-animation', settings.messageAnimation ? '' : 'none');
+        document.documentElement.classList.toggle('reduce-motion', settings.reducedMotion);
+        document.documentElement.classList.toggle('high-contrast', settings.highContrast);
+        
+        // Save settings to localStorage
+        localStorage.setItem('settings', JSON.stringify(settings));
+        
+        // Close modal
+        settingsModal.classList.add('hidden');
+        
+        // Show confirmation
+        showToast('Settings saved!');
+      });
+    }
+    
+    // --- Platform specific adjustments ---
+    function applyPlatformSpecificAdjustments() {
+      const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isMobile) {
+        document.body.classList.add('mobile');
+        
+        // Adjust viewport on focus to prevent zoom on iOS
+        if (isIOS) {
+          document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+          
+          // Fix for iOS Safari's extra padding on inputs
+          document.querySelectorAll('input, textarea').forEach(input => {
+            input.style.fontSize = '16px';
+          });
+        }
+      }
+      
+      if (isSafari) {
+        document.body.classList.add('safari');
+      }
+    }
+    
+    // --- Initialize Lottie animations ---
+    function initLottieAnimations() {
+      // Loading animation
+      const loadingAnimation = lottie.loadAnimation({
+        container: document.getElementById('lottie-loading'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets10.lottiefiles.com/packages/lf20_rLfMZE.json' // Chat loading animation
+      });
+      
+      // Logo animation
+      const logoAnimation = lottie.loadAnimation({
+        container: document.getElementById('logo-animation'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets5.lottiefiles.com/packages/lf20_bujdzzfn.json' // Chat logo
+      });
+      
+      // Email animation
+      const emailAnimation = lottie.loadAnimation({
+        container: document.getElementById('lottie-email'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets1.lottiefiles.com/packages/lf20_u4yrau.json' // Replaced with a working email animation
+      });
+      
+      // Hide loading screen after assets are loaded
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('loading-animation');
+          gsap.to(loadingScreen, {
+            opacity: 0,
+            duration: 0.5,
+            onComplete: () => {
+              loadingScreen.style.display = 'none';
+            }
+          });
+        }, 1000);
+      });
+    }
+    
+    // --- Initialize FAQ and Feedback modals ---
+    function initFAQAndFeedback() {
+      const faqButton = document.getElementById('faq-button');
+      const faqModal = document.getElementById('faq-modal');
+      const closeFAQ = document.getElementById('close-faq');
+      const faqContainer = document.getElementById('faq-container');
+      
+      const feedbackButton = document.getElementById('feedback-button');
+      const feedbackModal = document.getElementById('feedback-modal');
+      const closeFeedback = document.getElementById('close-feedback');
+      const feedbackForm = document.getElementById('feedback-form');
+      
+      // Load FAQ data from API
+      function loadFAQs() {
+        fetch(`${API_BASE_URL}/api/faq`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to fetch FAQs');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Clear loading spinner
+            faqContainer.innerHTML = '';
+            
+            if (data.faqs && data.faqs.length > 0) {
+              // Populate FAQ content
+              data.faqs.forEach(faq => {
+                const faqItem = document.createElement('div');
+                faqItem.className = 'border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden';
+                
+                const question = document.createElement('button');
+                question.className = 'w-full text-left p-4 font-medium flex justify-between items-center';
+                question.innerHTML = `
+                  <span>${faq.question}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                `;
+                
+                const answer = document.createElement('div');
+                answer.className = 'p-4 border-t border-gray-200 dark:border-gray-700 hidden';
+                answer.innerHTML = `<p>${faq.answer}</p>`;
+                
+                faqItem.appendChild(question);
+                faqItem.appendChild(answer);
+                
+                faqContainer.appendChild(faqItem);
+                
+                // Toggle answer visibility
+                question.addEventListener('click', () => {
+                  answer.classList.toggle('hidden');
+                  const svg = question.querySelector('svg');
+                  svg.classList.toggle('rotate-180');
+                });
+              });
+            } else {
+              faqContainer.innerHTML = '<p class="text-center text-gray-500">No FAQs available at this time.</p>';
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching FAQs:', error);
+            faqContainer.innerHTML = '<p class="text-center text-red-500">Failed to load FAQs. Please try again later.</p>';
+          });
+      }
+      
+      // Toggle FAQ modal
+      faqButton.addEventListener('click', () => {
+        faqModal.classList.remove('hidden');
+        loadFAQs();
+      });
+      
+      closeFAQ.addEventListener('click', () => {
+        faqModal.classList.add('hidden');
+      });
+      
+      // Toggle feedback modal
+      feedbackButton.addEventListener('click', () => {
+        feedbackModal.classList.remove('hidden');
+      });
+      
+      closeFeedback.addEventListener('click', () => {
+        feedbackModal.classList.add('hidden');
+      });
+      
+      // Handle feedback form submission
+      feedbackForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const feedbackText = document.getElementById('feedback-text').value;
+        
+        if (!rating) {
+          showToast('Please select a rating');
+          return;
+        }
+        
+        if (!feedbackText.trim()) {
+          showToast('Please enter your feedback');
+          return;
+        }
+        
+        // Get the email from localStorage
+        const email = localStorage.getItem('userEmail') || 'anonymous@example.com';
+        const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
+        
+        // Prepare feedback data
+        const feedbackData = {
+          email: email,
+          rating: parseInt(rating.value),
+          feedback_text: feedbackText,
+          user_id: userData ? userData.id : undefined
+        };
+        
+        // Submit feedback to API
+        fetch(`${API_BASE_URL}/api/feedback`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(feedbackData)
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to submit feedback');
+          }
+          return response.json();
+        })
+        .then(data => {
+          showToast('Thank you for your feedback!');
+          feedbackModal.classList.add('hidden');
+          
+          // Reset form
+          feedbackForm.reset();
+        })
+        .catch(error => {
+          console.error('Error submitting feedback:', error);
+          showToast('Failed to submit feedback. Please try again.');
+        });
+      });
+      
+      // Close modals when clicking outside
+      document.addEventListener('click', (e) => {
+        // Check if click is outside the FAQ modal content
+        if (!faqModal.classList.contains('hidden') && 
+            e.target === faqModal) {
+          faqModal.classList.add('hidden');
+        }
+        
+        // Check if click is outside the feedback modal content
+        if (!feedbackModal.classList.contains('hidden') && 
+            e.target === feedbackModal) {
+          feedbackModal.classList.add('hidden');
+        }
+      });
+    }
+    
+    // --- Main initialization function ---
+    function initializeUI() {
+      // Initialize all components
+      initEmojiPanel();
+      initializeSettings();
+      setupEmailModalHandling();
+      applyPlatformSpecificAdjustments();
+      initLottieAnimations();
+      
+      // Initialize FAQ and feedback functionality
+      initFAQAndFeedback();
+      
+      // Load chat history from localStorage
+      renderChatMessages();
+      
+      // Check if welcome message should be hidden
+      if (localStorage.getItem("hideWelcome") === "true") {
+        document.getElementById('welcome-message').style.display = 'none';
+      }
+      
+      // Enable input if user is logged in
+      if (localStorage.getItem("userEmail")) {
+        messageInput.disabled = false;
+        sendButton.disabled = false;
+      }
+      
+      // Adjust textarea height on load
+      setTimeout(() => {
+        textareaDefaultHeight = messageInput.scrollHeight;
+        adjustTextareaHeight();
+      }, 100);
+    }
+    
+    // --- Check session expiry ---
+    function checkSessionExpiry() {
+      const loginTime = localStorage.getItem('loginTime');
+      if (loginTime) {
+        const now = new Date().getTime();
+        const sessionDuration = now - parseInt(loginTime);
+        
+        // Session expires after 24 hours (86400000 ms)
+        if (sessionDuration > 86400000) {
+          handleLogout();
+          showToast('Your session has expired. Please log in again.');
+        }
+      }
+    }
+    
+    // Fix send button functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      // Ensure chat form and send button event listeners are properly attached
+      const chatForm = document.getElementById('chat-form');
+      const sendButton = document.getElementById('send-button');
+      const messageInput = document.getElementById('message-input');
+      
+      if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          sendMessage();
+        });
+      }
+      
+      // Also attach event to send button directly for redundancy
+      if (sendButton) {
+        sendButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          sendMessage();
+        });
+      }
+      
+      // Enable keyboard shortcuts (Enter to send, Shift+Enter for new line)
+      if (messageInput) {
+        messageInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+      }
+    });
+    
+    // Initialize the application when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize theme first for smoother visual transition
+      initTheme();
+      
+      // Initialize all UI components
+      initializeUI();
+      
+      // Set login time if not set
+      if (localStorage.getItem('userData') && !localStorage.getItem('loginTime')) {
+        localStorage.setItem('loginTime', new Date().getTime());
+      }
+      
+      // Check session expiry
+      checkSessionExpiry();
+    });
+  </script>
+</body>
+</html>
+``` 

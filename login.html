@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In - Chat Hub Pro</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- Lottie for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <!-- Lead Automation System -->
+  <script src="lead-automation.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            primary: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              200: '#a5f3fc',
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              900: '#164e63',
+              950: '#083344',
+            },
+            secondary: {
+              50: '#fdf4ff',
+              100: '#fae8ff',
+              200: '#f5d0fe',
+              300: '#f0abfc',
+              400: '#e879f9',
+              500: '#d946ef',
+              600: '#c026d3',
+              700: '#a21caf',
+              800: '#86198f',
+              900: '#701a75',
+              950: '#4a044e',
+            }
+          },
+          animation: {
+            'float': 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          },
+          boxShadow: {
+            'glow': '0 0 15px rgba(6, 182, 212, 0.5)',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.5);
+      border-radius: 20px;
+    }
+    
+    /* Animated background */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.05;
+      background: linear-gradient(125deg, #06b6d4, #a21caf);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      background-color: #06b6d4;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    /* Glass effect */
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .dark .glass {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Lottie animation container */
+    .lottie-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors min-h-screen flex flex-col font-sans">
+  <!-- Animated background -->
+  <div class="animated-bg"></div>
+  
+  <!-- Header with inline SVG logo -->
+  <header class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 p-4">
+    <div class="container mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#06b6d4">
+            <circle cx="24" cy="24" r="22" stroke="#155e75" stroke-width="4" fill="none"/>
+            <path d="M14 24a10 10 0 1120 0 10 10 0 01-20 0z" fill="#0e7490"/>
+          </svg>
+        </div>
+        <h1 class="text-xl font-bold text-primary-600 dark:text-primary-400">Chat Hub Pro</h1>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Login Form -->
+  <main class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl w-full max-w-md border border-gray-200 dark:border-gray-700">
+      <div class="flex justify-center mb-6">
+        <div id="lottie-login" class="w-24 h-24"></div>
+      </div>
+      <h2 class="text-2xl font-bold mb-2 text-center">Log In to Your Account</h2>
+      <p class="text-gray-600 dark:text-gray-400 mb-6 text-center">Welcome back to Chat Hub Pro</p>
+      
+      <div id="login-error" class="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-3 rounded-lg mb-4 hidden"></div>
+      
+      <form id="login-form" class="space-y-4">
+        <div class="space-y-2">
+          <label for="login-email" class="block text-sm font-medium">Email</label>
+          <div class="relative">
+            <input type="email" id="login-email" name="email" placeholder="Your email address" required class="w-full p-3 pl-10 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none"/>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+            </svg>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label for="login-password" class="block text-sm font-medium">Password</label>
+          <div class="relative">
+            <input type="password" id="login-password" name="password" placeholder="Your password" required class="w-full p-3 pl-10 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none"/>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <button type="button" id="toggle-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <!-- Initially show eye icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full p-3 rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium shadow-md transition-colors">Log In</button>
+      </form>
+      <div class="mt-6 text-center">
+        <p class="text-gray-600 dark:text-gray-400">Don't have an account? <a href="signup.html" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">Sign Up</a></p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 dark:border-gray-800 py-4">
+    <div class="container mx-auto text-center text-gray-500 dark:text-gray-400 text-sm">
+      &copy; 2025 Chat Hub Pro. All rights reserved.
+    </div>
+  </footer>
+  
+  <!-- Toast notification -->
+  <div id="toast" class="toast">
+    Message copied to clipboard!
+  </div>
+  
+  <script>
+    // --- Lottie Animations ---
+    function initLottieAnimations() {
+      // Login animation
+      const loginAnim = lottie.loadAnimation({
+        container: document.getElementById('lottie-login'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets2.lottiefiles.com/packages/lf20_khzniaya.json'
+      });
+    }
+    
+    // --- Theme Management ---
+    function initTheme() {
+      // Check for saved theme preference or use system preference
+      const savedTheme = localStorage.getItem('theme');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    
+    // --- Show Toast Notification ---
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    // API connection configuration
+    const API_BASE_URL = 'https://api-example-chatbot.example.com';
+    
+    // --- Toggle Password Visibility ---
+    function setupPasswordToggle() {
+      const toggleButton = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('login-password');
+      
+      toggleButton.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        // Toggle icon
+        if (type === 'text') {
+          toggleButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>
+          `;
+        } else {
+          toggleButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          `;
+        }
+      });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const errorDiv = document.getElementById('login-error');
+      
+      // Clear any previous error
+      errorDiv.textContent = '';
+      errorDiv.classList.add('hidden');
+
+      if (!email || !password) {
+        errorDiv.textContent = 'Please fill in all fields.';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      // Enable button loading state
+      const loginButton = document.querySelector('#login-form button[type="submit"]');
+      loginButton.disabled = true;
+      loginButton.innerHTML = `
+        <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Logging in...
+      `;
+
+      // Simulate backend communication delay
+      setTimeout(() => {
+        try {
+          // Check if user exists in localStorage (from signup)
+          const users = JSON.parse(localStorage.getItem('chatHubUsers') || '{}');
+          const user = users[email];
+          
+          if (!user || user.password !== password) {
+            throw new Error('Invalid email or password');
+          }
+
+          // Store user data and email in localStorage for session
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userData", JSON.stringify({
+            id: btoa(email), // simple ID generation
+            email: email,
+            full_name: user.full_name,
+            company: user.company
+          }));
+          
+          showToast('Login successful!');
+
+          // Track login event with lead manager
+          if (window.leadManager) {
+            window.leadManager.addOrUpdateLead({
+              email: email,
+              metadata: { 
+                source: 'login',
+                lastLogin: new Date().toISOString() 
+              }
+            });
+          }
+
+          // Set login time for session expiration check
+          localStorage.setItem("loginTime", new Date().getTime());
+
+          // Redirect to dashboard or chat page
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Login error:', error);
+          errorDiv.textContent = error.message;
+          errorDiv.classList.remove('hidden');
+          
+          // Reset button state
+          loginButton.disabled = false;
+          loginButton.innerHTML = 'Log In';
+        }
+      }, 1000); // Simulate network delay
+    });
+    
+    // --- Initialize the app ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initLottieAnimations();
+      setupPasswordToggle();
+    });
+  </script>
+</body>
+</html>
